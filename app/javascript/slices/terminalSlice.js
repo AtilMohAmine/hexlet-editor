@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /* eslint-disable no-param-reassign */
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
@@ -7,14 +8,24 @@ export const runCode = createAsyncThunk(
     const response = await new Promise((resolve) => {
       setTimeout(() => {
         let result;
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
 
         try {
+          const internalLogs = [];
+          // eslint-disable-next-line func-names
+          iframe.contentWindow.console.log = function (value) {
+            internalLogs.push(value);
+          };
+
           // eslint-disable-next-line no-eval
-          result = eval(code);
+          iframe.contentWindow.eval(code);
+          result = internalLogs.join('\n');
         } catch (err) {
           result = err.toString();
         }
-
+        document.body.removeChild(iframe);
         resolve(result);
       }, 1000);
     });
